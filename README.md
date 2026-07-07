@@ -35,8 +35,6 @@ Este proyecto consiste en el desarrollo de una lancha autónoma capaz de navegar
 
 ## 🏗️ Estructura del Proyecto
 
-
-
 🚀 Funcionalidades Principales
 Modos de Operación
 Manual: Control remoto desde estación base
@@ -44,4 +42,18 @@ Manual: Control remoto desde estación base
 Semiautónomo: Asistencia en navegación
 
 Autónomo: Navegación completamente independiente
+
+
+Características
+✅ Planificación de rutas con waypoints
+
+✅ Evasión dinámica de obstáculos
+
+✅ Registro de datos de navegación
+
+✅ Transmisión de telemetría en tiempo real
+
+✅ Sistema de seguridad con emergencia automática
+
+⭐ Si te gusta este proyecto, no olvides darle una estrella en GitHub!
 
