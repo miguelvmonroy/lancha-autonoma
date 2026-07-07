@@ -35,13 +35,13 @@ Este proyecto consiste en el desarrollo de una lancha autónoma capaz de navegar
 
 ## 🏗️ Estructura del Proyecto
 
-lancha-autonoma/
-├── src/
-│ ├── control/ # Algoritmos de control
-│ ├── sensores/ # Drivers de sensores
-│ ├── navegacion/ # Sistemas de navegación
-│ └── comunicacion/ # Módulos de comunicación
-├── hardware/ # Esquemas y planos
-├── docs/ # Documentación
-├── tests/ # Pruebas unitarias
-└── config/ # Archivos de configuración
+
+
+🚀 Funcionalidades Principales
+Modos de Operación
+Manual: Control remoto desde estación base
+
+Semiautónomo: Asistencia en navegación
+
+Autónomo: Navegación completamente independiente
+
