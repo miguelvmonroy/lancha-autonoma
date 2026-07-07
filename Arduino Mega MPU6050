@@ -1,0 +1,162 @@
+#include <Wire.h>
+#include <MPU6050_light.h>
+#include <TinyGPS++.h>
+
+MPU6050 mpu(Wire);
+TinyGPSPlus gps;
+
+// ========== FILTROS ==========
+float pitchFiltrado = 0;
+float alfa = 0.2;
+
+// ========== RUMBO ==========
+float yawRaw = 0;
+float yawAnterior = 0;
+float yawAbsoluto = 0;
+unsigned long tiempoAnterior = 0;
+
+// ========== POSICIÓN REAL GPS ==========
+float latitud = 0;
+float longitud = 0;
+float altitud = 0;
+int satelites = 0;
+bool gpsFix = false;
+
+// ========== CONTROL DE ENVÍO ==========
+unsigned long tiempoDestino = 0;
+unsigned long tiempoPosicion = 0;
+bool calibrado = false;
+unsigned long ultimoEnvioPosicion = 0;
+
+// ========== FILTRO PARA POSICIÓN (opcional, suaviza el GPS) ==========
+float latFiltrada = 0;
+float lngFiltrada = 0;
+float alfaGPS = 0.3;
+
+void setup() {
+  Serial.begin(115200);
+  Serial1.begin(115200);   // Comunicación con ESP32
+  Serial3.begin(9600);     // GPS NEO-M8N en pines 14(TX3) y 15(RX3)
+  Wire.begin();
+  
+  Serial.println("=== ARDUINO MEGA - NAVEGANTE CON GPS REAL ===");
+  
+  // Inicializar MPU6050
+  byte status = mpu.begin();
+  if (status != 0) {
+    Serial.print("Error MPU6050: ");
+    Serial.println(status);
+    while (1);
+  }
+  
+  Serial.println("Calibrando sensor MPU6050 (5 segundos, NO mover)...");
+  delay(5000);
+  mpu.calcOffsets(true, true);
+  Serial.println("Calibracion MPU6050 completada");
+  
+  tiempoAnterior = millis();
+  yawAnterior = mpu.getAngleZ();
+  calibrado = true;
+  
+  Serial.println("Esperando señal GPS...");
+}
+
+void loop() {
+  if (!calibrado) return;
+  
+  // ========== LEER DATOS DEL GPS ==========
+  while (Serial3.available() > 0) {
+    char c = Serial3.read();
+    if (gps.encode(c)) {
+      // Cuando se recibe una trama NMEA completa, actualizar datos
+      if (gps.location.isValid()) {
+        latitud = gps.location.lat();
+        longitud = gps.location.lng();
+        altitud = gps.altitude.meters();
+        satelites = gps.satellites.value();
+        gpsFix = true;
+        
+        // Aplicar filtro pasa-bajos a la posición (opcional)
+        if (latFiltrada == 0 && lngFiltrada == 0) {
+          latFiltrada = latitud;
+          lngFiltrada = longitud;
+        } else {
+          latFiltrada = alfaGPS * latitud + (1 - alfaGPS) * latFiltrada;
+          lngFiltrada = alfaGPS * longitud + (1 - alfaGPS) * lngFiltrada;
+        }
+      } else {
+        gpsFix = false;
+      }
+    }
+  }
+  
+  // ========== LEER MPU6050 ==========
+  mpu.update();
+  
+  // Leer rumbo actual
+  yawRaw = mpu.getAngleZ();
+  float pitchRaw = mpu.getAngleY();
+  pitchFiltrado = (alfa * pitchRaw) + ((1 - alfa) * pitchFiltrado);
+  
+  // Calcular rumbo absoluto (filtro complementario)
+  unsigned long tiempoActual = millis();
+  float dt = (tiempoActual - tiempoAnterior) / 1000.0;
+  
+  if (dt > 0.01 && dt < 0.5) {
+    float yawAcelerometro = atan2(mpu.getAccY(), mpu.getAccX()) * 180.0 / PI;
+    yawAbsoluto = 0.98 * (yawAbsoluto + (yawRaw - yawAnterior)) + 0.02 * yawAcelerometro;
+    yawAnterior = yawRaw;
+  }
+  tiempoAnterior = tiempoActual;
+  
+  // ========== ENVIAR POSICIÓN Y RUMBO AL ESP32 ==========
+  // Enviar cada 100ms para visualización suave
+  if (millis() - ultimoEnvioPosicion > 100) {
+    ultimoEnvioPosicion = millis();
+    
+    if (gpsFix) {
+      // Enviar coordenadas GPS reales
+      Serial1.print("GPS,");
+      Serial1.print(latFiltrada, 6);     // Latitud (6 decimales)
+      Serial1.print(",");
+      Serial1.print(lngFiltrada, 6);     // Longitud (6 decimales)
+      Serial1.print(",");
+      Serial1.print(yawAbsoluto, 1);     // Rumbo
+      Serial1.print(",");
+      Serial1.print(satelites);          // Número de satélites
+      Serial1.println();
+    } else {
+      // Si no hay señal GPS, enviar indicador de pérdida
+      Serial1.print("GPS,NO_FIX,");
+      Serial1.println(yawAbsoluto, 1);
+    }
+  }
+  
+  // ========== MOSTRAR DATOS EN MONITOR SERIE ==========
+  static unsigned long lastPrint = 0;
+  if (millis() - lastPrint > 500) {
+    lastPrint = millis();
+    
+    Serial.print("Rumbo: ");
+    Serial.print(yawAbsoluto, 1);
+    Serial.print("° | ");
+    
+    if (gpsFix) {
+      Serial.print("GPS: ");
+      Serial.print(latFiltrada, 6);
+      Serial.print(", ");
+      Serial.print(lngFiltrada, 6);
+      Serial.print(" | Sat: ");
+      Serial.print(satelites);
+      Serial.print(" | Alt: ");
+      Serial.print(altitud, 1);
+      Serial.print("m");
+    } else {
+      Serial.print("Buscando señal GPS...");
+    }
+    
+    Serial.println();
+  }
+  
+  delay(20);  // Pequeña pausa para estabilidad
+}
