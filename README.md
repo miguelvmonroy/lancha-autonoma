@@ -22,7 +22,6 @@ Este proyecto consiste en el desarrollo de una lancha autónoma capaz de navegar
   - GPS (NEO-6M)
   - IMU (MPU6050)
   - Ultrasonidos (HC-SR04)
-  - Sensor de corriente
 - **Actuadores**:
   - Motor eléctrico con controlador ESC
   - Servomotores para timón
