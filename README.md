@@ -31,6 +31,6 @@ Este proyecto consiste en el desarrollo de una lancha autónoma capaz de navegar
 - **Lenguaje**: C++ / Python
 - **Framework**: ROS (Robot Operating System)
 - **Control**: PID para estabilización y navegación
-- **Interfaz**: Qt / Web Dashboard
+- **Interfaz**: Tkinter / Web Dashboard
 
 ## 🏗️ Estructura del Proyecto
