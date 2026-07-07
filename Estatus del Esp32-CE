@@ -1,0 +1,42 @@
+void setup() {
+  // Iniciar la comunicación serial
+  Serial.begin(115200);
+  
+  // Pequeña pausa para asegurar la conexión
+  delay(1000);
+
+  // --- Imprimir mensaje de estado ---
+  Serial.println();
+  Serial.println("================================");
+  Serial.println("   ✅ ESP32-C3 EN VIVO!");
+  Serial.println("================================");
+  Serial.println();
+
+  // Información básica del chip
+  Serial.print("Chip: ESP32-C3 (Rev. ");
+  Serial.print(ESP.getChipRevision());
+  Serial.println(")");
+  
+  Serial.print("Frecuencia: ");
+  Serial.print(ESP.getCpuFreqMHz());
+  Serial.println(" MHz");
+
+  Serial.print("Memoria RAM disponible: ");
+  Serial.print(ESP.getFreeHeap());
+  Serial.println(" bytes");
+
+  Serial.print("Memoria Flash: ");
+  Serial.print(ESP.getFlashChipSize() / (1024 * 1024));
+  Serial.println(" MB");
+
+  Serial.println();
+  Serial.println("✅ Todo funciona correctamente.");
+  Serial.println("================================");
+  Serial.println();
+}
+
+void loop() {
+  // El bucle se mantiene vacío, solo enviamos el estado una vez.
+  // Puedes agregar acciones aquí si lo deseas.
+  delay(1000);
+}
