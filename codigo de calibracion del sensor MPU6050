@@ -1,0 +1,126 @@
+#include <Wire.h>
+#include <MPU6050.h>
+
+MPU6050 mpu;
+int16_t ax, ay, az;
+int16_t gx, gy, gz;
+
+// Variables para almacenar los offsets de calibración
+long gx_offset = 0, gy_offset = 0, gz_offset = 0;
+long ax_offset = 0, ay_offset = 0, az_offset = 0;
+const int muestras = 1000; // Número de muestras para calibración
+
+void setup() {
+  Serial.begin(9600);
+  Wire.begin();
+  
+  Serial.println("=================================");
+  Serial.println("CALIBRACIÓN DEL MPU6050");
+  Serial.println("=================================");
+  
+  // Inicializar sensor
+  mpu.initialize();
+  
+  if (mpu.testConnection()) {
+    Serial.println("✅ Sensor conectado correctamente");
+    
+    // INICIO DE CALIBRACIÓN
+    Serial.println("\n📢 IMPORTANTE: Coloca el sensor en SUPERFICIE PLANA y HORIZONTAL");
+    Serial.println("NO LO MUEVAS durante la calibración");
+    Serial.println("La calibración comenzará en 3 segundos...");
+    
+    delay(3000);
+    Serial.println("⚙️ Calibrando... 0%");
+    
+    // Tomar muestras para calibración
+    for (int i = 0; i < muestras; i++) {
+      mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+      
+      // Acumular valores
+      ax_offset += ax;
+      ay_offset += ay;
+      az_offset += az;
+      gx_offset += gx;
+      gy_offset += gy;
+      gz_offset += gz;
+      
+      // Mostrar progreso cada 10%
+      if (i % (muestras/10) == 0) {
+        Serial.print("⚙️ Calibrando... ");
+        Serial.print((i * 100) / muestras);
+        Serial.println("%");
+      }
+      
+      delay(5);
+    }
+    
+    // Calcular promedios (offsets)
+    ax_offset = ax_offset / muestras;
+    ay_offset = ay_offset / muestras;
+    az_offset = az_offset / muestras;
+    gx_offset = gx_offset / muestras;
+    gy_offset = gy_offset / muestras;
+    gz_offset = gz_offset / muestras;
+    
+    // Ajuste especial para el acelerómetro Z (debe ser 16384 en reposo)
+    // El offset de Z debe hacer que el valor calibrado sea 16384
+    az_offset = az_offset - 16384;
+    
+    Serial.println("✅ ¡CALIBRACIÓN COMPLETADA!");
+    Serial.println("\n📊 RESULTADOS DE CALIBRACIÓN:");
+    Serial.println("=================================");
+    Serial.println("Guarda estos valores para usarlos en tus programas:");
+    Serial.println("---------------------------------");
+    Serial.print("Acelerómetro - Offset X: "); Serial.println(ax_offset);
+    Serial.print("Acelerómetro - Offset Y: "); Serial.println(ay_offset);
+    Serial.print("Acelerómetro - Offset Z: "); Serial.println(az_offset);
+    Serial.println("---------------------------------");
+    Serial.print("Giroscopio - Offset X: "); Serial.println(gx_offset);
+    Serial.print("Giroscopio - Offset Y: "); Serial.println(gy_offset);
+    Serial.print("Giroscopio - Offset Z: "); Serial.println(gz_offset);
+    Serial.println("=================================");
+    
+    Serial.println("\n📝 Código para usar estos offsets:");
+    Serial.println("---------------------------------");
+    Serial.println("// Define estos valores al inicio de tu código:");
+    Serial.print("#define GX_OFFSET "); Serial.println(gx_offset);
+    Serial.print("#define GY_OFFSET "); Serial.println(gy_offset);
+    Serial.print("#define GZ_OFFSET "); Serial.println(gz_offset);
+    Serial.print("#define AX_OFFSET "); Serial.println(ax_offset);
+    Serial.print("#define AY_OFFSET "); Serial.println(ay_offset);
+    Serial.print("#define AZ_OFFSET "); Serial.println(az_offset);
+    Serial.println("---------------------------------");
+    
+    Serial.println("\n🔄 Mostrando datos CALIBRADOS en tiempo real:");
+    Serial.println("(Valores deberían ser cercanos a 0 en giroscopio y Z=16384 en acelerómetro)");
+    Serial.println("=================================\n");
+    
+  } else {
+    Serial.println("❌ ERROR: No se pudo conectar al sensor");
+    while (1);
+  }
+}
+
+void loop() {
+  // Leer datos del sensor
+  mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+  
+  // Aplicar calibración
+  int16_t ax_cal = ax - ax_offset;
+  int16_t ay_cal = ay - ay_offset;
+  int16_t az_cal = az - az_offset;
+  int16_t gx_cal = gx - gx_offset;
+  int16_t gy_cal = gy - gy_offset;
+  int16_t gz_cal = gz - gz_offset;
+  
+  // Mostrar datos calibrados
+  Serial.print("Acel X: "); Serial.print(ax_cal);
+  Serial.print(" | Y: "); Serial.print(ay_cal);
+  Serial.print(" | Z: "); Serial.print(az_cal);
+  
+  Serial.print(" | Giro X: "); Serial.print(gx_cal);
+  Serial.print(" | Y: "); Serial.print(gy_cal);
+  Serial.print(" | Z: "); Serial.println(gz_cal);
+  
+  delay(200);
+}
