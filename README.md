@@ -34,3 +34,14 @@ Este proyecto consiste en el desarrollo de una lancha autónoma capaz de navegar
 - **Interfaz**: Tkinter / Web Dashboard
 
 ## 🏗️ Estructura del Proyecto
+
+lancha-autonoma/
+├── src/
+│ ├── control/ # Algoritmos de control
+│ ├── sensores/ # Drivers de sensores
+│ ├── navegacion/ # Sistemas de navegación
+│ └── comunicacion/ # Módulos de comunicación
+├── hardware/ # Esquemas y planos
+├── docs/ # Documentación
+├── tests/ # Pruebas unitarias
+└── config/ # Archivos de configuración
