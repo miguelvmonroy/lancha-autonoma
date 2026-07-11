@@ -1,5 +1,8 @@
 # 🚤 Lancha Autónoma - Proyecto de Navegación Autónoma
 
+
+https://github.com/miguelvmonroy/lancha-autonoma/blob/main/protypeship.jpg
+
 ![Estado del Proyecto](https://img.shields.io/badge/Estado-En%20Desarrollo-yellow)
 ![Versión](https://img.shields.io/badge/Versión-1.0.0-blue)
 ![Licencia](https://img.shields.io/badge/Licencia-MIT-green)
